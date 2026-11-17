@@ -34,6 +34,13 @@ const (
 	VaultExists      = Err("vault_exists")
 )
 
+// Хранилище (этап 2).
+const (
+	VaultCorrupt = Err("vault_corrupt")
+	VaultTooNew  = Err("vault_too_new")
+	VaultNotOpen = Err("vault_not_open")
+)
+
 // texts — текст для пользователя по коду. Коротко, без технических деталей.
 var texts = map[Err]string{ //nolint:gosec // G101: user-facing texts, not credentials
 	Internal:       "Что-то пошло не так. Подробности — в журнале.",
@@ -53,6 +60,10 @@ var texts = map[Err]string{ //nolint:gosec // G101: user-facing texts, not crede
 	VaultInvalid:     "Это не хранилище Brassbox.",
 	VaultDamaged:     "Заголовок хранилища повреждён. Восстановите хранилище из копии.",
 	VaultExists:      "Такой файл уже есть — не перезаписываем.",
+
+	VaultCorrupt: "Хранилище повреждено. Восстановите его из копии.",
+	VaultTooNew:  "Хранилище создано более новой версией Brassbox. Обновите программу.",
+	VaultNotOpen: "Хранилище не открыто.",
 }
 
 // ErrFull — ошибка с пояснением для журнала (Desc на экран не выводится).

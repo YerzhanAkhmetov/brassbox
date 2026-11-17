@@ -254,6 +254,59 @@ func (s *Service) RewrapMaster(path string, dek, master []byte) error {
 	})
 }
 
+// Verify — DEK подходит к этому файлу.
+func (s *Service) Verify(path string, dek []byte) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	f, err := openFile(path, os.O_RDONLY)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+
+	st, err := readState(f)
+	if err != nil {
+		return err
+	}
+	return verifyDEK(st.h, dek)
+}
+
+// Clone — заголовок src (как есть, обе копии) в начало существующего dst.
+func (s *Service) Clone(src, dst string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	in, err := openFile(src, os.O_RDONLY)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = in.Close() }()
+	if _, err := readState(in); err != nil { // источник — целый заголовок Brassbox
+		return err
+	}
+	buf := make([]byte, localConstant.Size)
+	if _, err := in.ReadAt(buf, 0); err != nil {
+		return fmt.Errorf("read header: %w", err)
+	}
+
+	out, err := openFile(dst, os.O_RDWR)
+	if err != nil {
+		return err
+	}
+	_, err = out.WriteAt(buf, 0)
+	if err == nil {
+		err = out.Sync()
+	}
+	if cerr := out.Close(); err == nil {
+		err = cerr
+	}
+	if err != nil {
+		return fmt.Errorf("write header copy: %w", err)
+	}
+	return nil
+}
+
 // update — прочитать, проверить DEK, изменить, записать в другую копию.
 func (s *Service) update(path string, dek []byte, change func(*localModel.Header) error) error {
 	s.mu.Lock()

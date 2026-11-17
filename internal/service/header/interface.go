@@ -29,4 +29,10 @@ type Header interface {
 	RemovePassword(path string, dek []byte) error
 	// RewrapMaster — замок 2 под другой мастер-ключ (подключение чужой базы своим ключом).
 	RewrapMaster(path string, dek, master []byte) error
+
+	// Verify — DEK подходит к этому файлу (errs.KeyWrong). Ничего не пишет.
+	Verify(path string, dek []byte) error
+	// Clone — записать заголовок src в первые 4 КиБ существующего файла dst
+	// (копия базы: VACUUM INTO оставляет это место пустым).
+	Clone(src, dst string) error
 }

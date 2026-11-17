@@ -427,6 +427,41 @@ func TestReadNotBrassbox(t *testing.T) {
 	}
 }
 
+func TestVerify(t *testing.T) {
+	v := newVault(t, pass)
+	require.NoError(t, v.svc.Verify(v.path, v.dek))
+	require.ErrorIs(t, v.svc.Verify(v.path, crypto.NewKey()), errs.KeyWrong)
+	require.ErrorIs(t, v.svc.Verify(v.path, []byte("short")), errs.KeyWrong)
+	require.ErrorIs(t, v.svc.Verify(filepath.Join(t.TempDir(), "none"), v.dek), errs.ObjectNotFound)
+	assert.Equal(t, uint64(1), v.raw(t).h.Seq, "Verify ничего не пишет")
+}
+
+func TestClone(t *testing.T) {
+	v := newVault(t, pass)
+	_, _ = v.svc.UnlockPassword(v.path, "неверный-пароль") // в копию уходит и счётчик (заголовок как есть)
+
+	dst := filepath.Join(t.TempDir(), "copy.pwv")
+	tail := []byte("SQLITE-PAGES")
+	require.NoError(t, os.WriteFile(dst, append(make([]byte, localConstant.Size), tail...), 0o600))
+	require.NoError(t, v.svc.Clone(v.path, dst))
+
+	src, err := os.ReadFile(v.path)
+	require.NoError(t, err)
+	got, err := os.ReadFile(dst)
+	require.NoError(t, err)
+	assert.Equal(t, src[:localConstant.Size], got[:localConstant.Size])
+	assert.Equal(t, tail, got[localConstant.Size:], "данные после заголовка не тронуты")
+
+	dek, err := v.svc.UnlockMaster(dst, v.master)
+	require.NoError(t, err)
+	assert.Equal(t, v.dek, dek)
+
+	require.ErrorIs(t, v.svc.Clone(v.path, filepath.Join(t.TempDir(), "none")), errs.ObjectNotFound, "dst не создаётся")
+	notBB := filepath.Join(t.TempDir(), "x.pwv")
+	require.NoError(t, os.WriteFile(notBB, make([]byte, localConstant.Size), 0o600))
+	require.ErrorIs(t, v.svc.Clone(notBB, dst), errs.VaultInvalid, "источник — не Brassbox")
+}
+
 func TestDecodeSlotRejects(t *testing.T) {
 	v := newVault(t, pass)
 	good := v.raw(t).h
