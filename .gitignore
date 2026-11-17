@@ -1,0 +1,18 @@
+# сборка
+build/bin/
+frontend/dist/*
+!frontend/dist/.gitkeep
+frontend/node_modules/
+
+# локальные тесты и данные (по правилам проекта — не в git)
+tests/
+*.pwv
+*.log
+
+# редакторы, система
+.idea/
+.vscode/
+.DS_Store
+
+# Wails: хэш package.json (служебный)
+frontend/package.json.md5

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "Brassbox",
+  "outputfilename": "Brassbox",
+  "frontend:install": "pnpm install",
+  "frontend:build": "pnpm build",
+  "frontend:dev:watcher": "pnpm dev",
+  "frontend:dev:serverUrl": "auto",
+  "wailsjsdir": "./frontend",
+  "info": {
+    "companyName": "Brassbox",
+    "productName": "Brassbox",
+    "productVersion": "0.0.0",
+    "copyright": "",
+    "comments": "Хранилище паролей и документации"
+  }
+}
